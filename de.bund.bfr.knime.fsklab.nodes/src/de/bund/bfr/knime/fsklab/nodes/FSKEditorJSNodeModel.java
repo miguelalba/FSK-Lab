@@ -229,6 +229,7 @@ final class FSKEditorJSNodeModel
   @Override
   protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
       throws InvalidSettingsException {
+    
     nodeSettings.load(settings);
   }
 

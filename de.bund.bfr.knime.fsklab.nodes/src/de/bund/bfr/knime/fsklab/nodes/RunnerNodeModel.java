@@ -139,32 +139,36 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 
         ExecutionContext context = exec.createSubExecutionContext(1.0);
 
-        firstFskObj = runSnippet(controller, firstFskObj, fskSimulation, context,true);
+        firstFskObj = runSnippet(controller, firstFskObj, fskSimulation, context);
 
         List<JoinRelation> joinRelations = comFskObj.getJoinerRelation();
         for (JoinRelation joinRelation : joinRelations) {
           for (metadata.Parameter sourceParameter : firstFskObj.modelMath.getParameter()) {
-            if (joinRelation.getSourceParam().getParameterID()
-                .equals(sourceParameter.getParameterID())) {
+            
+            if (joinRelation.getSourceParam().getParameterID().equals(sourceParameter.getParameterID())) {
+              String tempVar = joinRelation.getTargetParam().getParameterID()+"temp";
+              //String tempCommand = tempVar + " <- "+joinRelation.getCommand();
+              controller.assign(tempVar, joinRelation.getCommand());
+              //runCommandSnippet(controller, tempCommand, exec);
               for (FskSimulation sim : secondFskObj.simulations) {
                 sim.getParameters().put(joinRelation.getTargetParam().getParameterID(),
-                    sourceParameter.getParameterValue());
+                    tempVar);
+                
               }
+             
             }
           }
         }
 
-      }
-      try (RController controller = new RController()) {
+     
 
         // get the index of the selected simulation saved by the JavaScript FSK Simulation
         // Configurator the default value is 0 which is the the default simulation
-        FskSimulation fskSimulation =
+        FskSimulation secondfskSimulation =
             secondFskObj.simulations.get(secondFskObj.selectedSimulationIndex);
 
-        ExecutionContext context = exec.createSubExecutionContext(1.0);
 
-        secondFskObj = runSnippet(controller, secondFskObj, fskSimulation, context,false);
+        secondFskObj = runSnippet(controller, secondFskObj, secondfskSimulation, context);
 
       }
       try (FileInputStream fis = new FileInputStream(internalSettings.imageFile)) {
@@ -188,7 +192,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 
         ExecutionContext context = exec.createSubExecutionContext(1.0);
 
-        fskObj = runSnippet(controller, fskObj, fskSimulation, context,false);
+        fskObj = runSnippet(controller, fskObj, fskSimulation, context);
       }
 
       try (FileInputStream fis = new FileInputStream(internalSettings.imageFile)) {
@@ -202,9 +206,18 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
       }
     }
   }
+  private void runCommandSnippet(final RController controller, String command,
+       final ExecutionMonitor exec)
+      throws Exception {
+    final ScriptExecutor executor = new ScriptExecutor(controller);
+    exec.setMessage("Setting up temp bridge variable");
+    executor.setupOutputCapturing(exec);
+    executor.execute(command, exec);
+  }
 
+  
   private FskPortObject runSnippet(final RController controller, final FskPortObject fskObj,
-      final FskSimulation simulation, final ExecutionMonitor exec, boolean isOutputForEval)
+      final FskSimulation simulation, final ExecutionMonitor exec)
       throws Exception {
 
     final ScriptExecutor executor = new ScriptExecutor(controller);
@@ -295,7 +308,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 
     // cleanup temporary variables of output capturing and consoleLikeCommand stuff
     exec.setMessage("Cleaning up");
-    if (isOutputForEval) {
+    /*if (isOutputForEval) {
       try {
         List<metadata.Parameter> outPutParameters = fskObj.modelMath.getParameter().stream()
             .filter(p -> p.getParameterClassification() == ParameterClassification.OUTPUT)
@@ -391,7 +404,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
       } catch (Exception ex) {
         LOGGER.error(ex);
       }
-    }
+    }*/
     executor.cleanup(exec);
 
     return fskObj;

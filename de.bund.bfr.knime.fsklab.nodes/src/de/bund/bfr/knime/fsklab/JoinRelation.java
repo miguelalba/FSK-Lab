@@ -31,7 +31,22 @@ public class JoinRelation {
   private Parameter sourceParam;
   private Parameter targetParam;
   private String command;
+  private String language_written_in;
+  private String Id ;
   
+ 
+  public String getId() {
+    return Id;
+  }
+  public void setId(String id) {
+    Id = id;
+  }
+  public String getLanguage_written_in() {
+    return language_written_in;
+  }
+  public void setLanguage_written_in(String language_written_in) {
+    this.language_written_in = language_written_in;
+  }
   public String getCommand() {
     return command;
   }

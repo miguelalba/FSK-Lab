@@ -147,9 +147,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
             
             if (joinRelation.getSourceParam().getParameterID().equals(sourceParameter.getParameterID())) {
               String tempVar = joinRelation.getTargetParam().getParameterID()+"temp";
-              //String tempCommand = tempVar + " <- "+joinRelation.getCommand();
               controller.assign(tempVar, joinRelation.getCommand());
-              //runCommandSnippet(controller, tempCommand, exec);
               for (FskSimulation sim : secondFskObj.simulations) {
                 sim.getParameters().put(joinRelation.getTargetParam().getParameterID(),
                     tempVar);

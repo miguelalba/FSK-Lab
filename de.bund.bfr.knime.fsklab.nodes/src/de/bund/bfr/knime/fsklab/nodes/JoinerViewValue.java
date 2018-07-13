@@ -39,6 +39,8 @@ class JoinerViewValue extends JSONViewContent {
   private static final NodeLogger LOGGER = NodeLogger.getLogger(JoinerViewValue.class);
   private static final String CFG_ORIGINAL_MODEL_SCRIPT = "originalModelScript";
   private static final String CFG_ORIGINAL_VISUALIZATION_SCRIPT = "originalVisualizationScript";
+  private static final String CFG_ORIGINAL_MODEL_SCRIPT2 = "originalModelScript2";
+  private static final String CFG_ORIGINAL_VISUALIZATION_SCRIPT2 = "originalVisualizationScript2";
   public final int pseudoIdentifier = (new Random()).nextInt();
   private static final String CFG_GENERAL_INFORMATION = "generalInformation";
   private static final String CFG_SCOPE = "scope";
@@ -78,6 +80,9 @@ class JoinerViewValue extends JSONViewContent {
   public void saveToNodeSettings(NodeSettingsWO settings) {
     settings.addString(CFG_ORIGINAL_MODEL_SCRIPT, firstModelScript);
     settings.addString(CFG_ORIGINAL_VISUALIZATION_SCRIPT, firstModelViz);
+    settings.addString(CFG_ORIGINAL_MODEL_SCRIPT2, secondModelScript);
+    settings.addString(CFG_ORIGINAL_VISUALIZATION_SCRIPT2, secondModelViz);
+    
     settings.addString(CFG_JOINER_RELATION, joinRelations);
     settings.addString(CFG_JSON_REPRESENTATION, jsonRepresentation);
 
@@ -111,6 +116,8 @@ class JoinerViewValue extends JSONViewContent {
   public void loadFromNodeSettings(NodeSettingsRO settings) throws InvalidSettingsException {
     firstModelScript = settings.getString(CFG_ORIGINAL_MODEL_SCRIPT);
     firstModelViz = settings.getString(CFG_ORIGINAL_VISUALIZATION_SCRIPT);
+    secondModelScript = settings.getString(CFG_ORIGINAL_MODEL_SCRIPT2);
+    secondModelViz = settings.getString(CFG_ORIGINAL_VISUALIZATION_SCRIPT2);
     joinRelations = settings.getString(CFG_JOINER_RELATION);
     jsonRepresentation = settings.getString(CFG_JSON_REPRESENTATION);
     // load meta data

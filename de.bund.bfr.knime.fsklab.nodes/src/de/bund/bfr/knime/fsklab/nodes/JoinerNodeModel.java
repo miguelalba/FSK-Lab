@@ -77,6 +77,7 @@ final class JoinerNodeModel extends
     AbstractWizardNodeModel<JoinerViewRepresentation, JoinerViewValue> implements PortObjectHolder {
   private final JoinerNodeSettings nodeSettings = new JoinerNodeSettings();
   private FskPortObject m_port;
+  public final String suffix = "_temp_Name_For_Joiner";
   // JoinerViewValue joinerProxyValue = new JoinerViewValue();
 
   // Input and output port types
@@ -454,7 +455,7 @@ final class JoinerNodeModel extends
           firstParam
               .setParameterName(firstParam.getParameterID() );
           firstParam
-              .setParameterID(firstParam.getParameterID() + "_temp_Name_For_Joiner");
+              .setParameterID(firstParam.getParameterID() + suffix);
           
         }
       }
@@ -482,9 +483,6 @@ final class JoinerNodeModel extends
           if( b1 || b2 )
           {
             iter.remove();
-          }else if(p.getParameterName().endsWith("_temp_To_Solve_Naming_Conflict")) {
-            
-            
           }
         }//while
       }//for

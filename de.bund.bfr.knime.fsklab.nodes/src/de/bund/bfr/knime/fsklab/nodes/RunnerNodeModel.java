@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.swing.JOptionPane;
 import org.apache.commons.io.FileUtils;
 import org.knime.base.node.util.exttool.ExtToolOutputNodeModel;
 import org.knime.core.data.image.png.PNGImageContent;
@@ -130,10 +131,31 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 
   @Override
   protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-
+    JOptionPane.showMessageDialog(null, "Hello world");
     FskPortObject fskObj = (FskPortObject) inData[0];
     try (RController controller = new RController()) {
-      fskObj = runFskPortObject(fskObj, exec, controller);
+      ScriptHandler handler = ScriptHandler.createHandler("r", internalSettings, nodeSettings);
+      
+      fskObj = handler.runFskPortObject(fskObj, exec, controller);
+      
+      
+        setExternalOutput(handler.getExternalOutput());
+      
+        
+      
+        final LinkedList<String> output = handler.getExternalErrorOutput();
+        if(output!=null)
+        setExternalErrorOutput(output);
+        
+
+        for (final String line : output) {
+          if (line.startsWith(ScriptExecutor.ERROR_PREFIX)) {
+            throw new RException(line, null);
+          }
+        }
+      
+      //fskObj = runFskPortObject(fskObj, exec, controller);
+       
     }
     try (FileInputStream fis = new FileInputStream(internalSettings.imageFile)) {
       final PNGImageContent content = new PNGImageContent(fis);
@@ -414,6 +436,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
     if (!executor.getStdErr().isEmpty()) {
       final LinkedList<String> output = getLinkedListFromOutput(executor.getStdErr());
       setExternalErrorOutput(output);
+      
 
       for (final String line : output) {
         if (line.startsWith(ScriptExecutor.ERROR_PREFIX)) {

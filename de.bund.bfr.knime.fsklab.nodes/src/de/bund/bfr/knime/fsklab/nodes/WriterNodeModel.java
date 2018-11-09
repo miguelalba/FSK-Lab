@@ -370,6 +370,7 @@ class WriterNodeModel extends NoInternalsModel {
           }
         }
         // try to get package info for libraries not installed yet.
+        //TODO: abstract runScript
         if (packagesWithoutInfo.size() > 0) {
           try {
             String command =
@@ -536,12 +537,13 @@ class WriterNodeModel extends NoInternalsModel {
     return externalModel;
   }
 
+  //TODO: abstract addScript()
   private static ArchiveEntry addRScript(final CombineArchive archive, final String script,
       final String filename) throws IOException, URISyntaxException {
 
-    final File file = File.createTempFile("temp", ".r");
+    final File file = File.createTempFile("temp","");
     FileUtils.writeStringToFile(file, script, "UTF-8");
-
+//  TODO: automate in some way
     final ArchiveEntry entry = archive.addEntry(file, filename, FSKML.getURIS(1, 0, 12).get("r"));
     file.delete();
 
@@ -585,7 +587,7 @@ class WriterNodeModel extends NoInternalsModel {
   }
 
 
-
+//TODO: automate for all languages in FSKML.class
   private static SEDMLDocument createSedml(FskPortObject portObj) {
 
     SEDMLDocument doc = Libsedml.createDocument();

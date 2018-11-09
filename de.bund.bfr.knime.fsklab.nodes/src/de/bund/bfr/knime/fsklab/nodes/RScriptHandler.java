@@ -62,8 +62,10 @@ public class RScriptHandler extends ScriptHandler {
 
     // START RUNNING MODEL
     exec.setProgress(0.1, "Setting up output capturing");
+    //TODO: captureErrorOutput
     executor.setupOutputCapturing(exec);
-
+    //TODO: optional: libraries need to be installed : abstract installLibraries
+    //
     // Install needed libraries
     if (!fskObj.packages.isEmpty()) {
       try {
@@ -80,18 +82,23 @@ public class RScriptHandler extends ScriptHandler {
       }
     }
 
+    //TODO: abstract setPaths (possibly not necessary)
     exec.setProgress(0.71, "Add paths to libraries");
     this.controller.addPackagePath(LibRegistry.instance().getInstallationPath());
 
     exec.setProgress(0.72, "Set parameter values");
     LOGGER.info(" Running with '" + simulation.getName() + "' simulation!");
+    //TODO: buildParameterScript
     String paramScript = NodeUtils.buildParameterScript(simulation);
+    //TODO: runScript
     executor.execute(paramScript, exec);
-
+  
     exec.setProgress(0.75, "Run models script");
+    //TODO: runScript
     executor.executeIgnoreResult(fskObj.model, exec);
 
     exec.setProgress(0.9, "Run visualization script");
+    //TODO: abstract plot()-- return absolute path to image
     try {
       NodeUtils.plot(internalSettings.imageFile, fskObj.viz, nodeSettings.width,
           nodeSettings.height, nodeSettings.pointSize, nodeSettings.res, executor, exec);
@@ -103,22 +110,30 @@ public class RScriptHandler extends ScriptHandler {
     }
 
     exec.setProgress(0.96, "Restore library paths");
+    //TODO:remove lib paths 
     this.controller.restorePackagePath();
 
     exec.setProgress(0.98, "Collecting captured output");
+    //TODO: finish capturing
     executor.finishOutputCapturing(exec);
 
     // END RUNNING MODEL
-
+    
+    //TODO: abstract saveworkspace (for R)  
     // Save workspace
     if (fskObj.workspace == null) {
+      
       fskObj.workspace = FileUtil.createTempFile("workspace", ".R").toPath();
     }
     this.controller.saveWorkspace(fskObj.workspace, exec);
+    
+    //END TODO
+    
     this.executor = executor;
     // process the return value of error capturing and update error and
     // output views accordingly
-    /*if (!executor.getStdOut().isEmpty()) {
+    //TODO: abstract capturelog
+/*    if (!executor.getStdOut().isEmpty()) {
       setExternalOutput(getLinkedListFromOutput(executor.getStdOut()));
     }
 
@@ -132,9 +147,10 @@ public class RScriptHandler extends ScriptHandler {
         }
       }
     }
-  
-*/    // cleanup temporary variables of output capturing and consoleLikeCommand stuff
+ */ 
+    // cleanup temporary variables of output capturing and consoleLikeCommand stuff
     exec.setProgress(0.99, "Cleaning up");
+    //TODO: clean up variables that are no longer needed
     executor.cleanup(exec);
     return fskObj;
     

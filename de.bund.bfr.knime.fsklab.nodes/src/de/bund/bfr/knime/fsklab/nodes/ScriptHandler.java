@@ -1,5 +1,7 @@
 package de.bund.bfr.knime.fsklab.nodes;
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -14,11 +16,14 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.python2.kernel.PythonKernel;
+import de.bund.bfr.fskml.FSKML;
 import de.bund.bfr.knime.fsklab.CombinedFskPortObject;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskSimulation;
 import de.bund.bfr.knime.fsklab.JoinRelation;
 import de.bund.bfr.knime.fsklab.r.client.RController;
+import de.unirostock.sems.cbarchive.ArchiveEntry;
+import de.unirostock.sems.cbarchive.CombineArchive;
 import metadata.Parameter;
 import metadata.ParameterClassification;
 
@@ -26,11 +31,13 @@ public abstract class ScriptHandler {
   
   
   AutoCloseable controller;
+  String fileExtention = "";
+  
   public abstract void setWorkingDirectory(Path workingDirectory)throws Exception;
   public abstract void setupOutputCapturing(ExecutionContext exec) throws Exception;
   public abstract void finishOutputCapturing(ExecutionContext exec) throws Exception;
   public abstract void setController(ExecutionContext exec) throws Exception;
-  public abstract void runScript(String script,
+  public abstract String[] runScript(String script,
       ExecutionContext exec,
       Boolean showErrors)throws Exception;
   
@@ -54,7 +61,7 @@ public abstract class ScriptHandler {
   
   public abstract void cleanup(ExecutionContext exec)throws Exception;
   
-  
+
   
   
 //  //protected static final NodeLogger LOGGER = NodeLogger.getLogger("Fskx Runner Node Model");
@@ -261,12 +268,11 @@ public abstract class ScriptHandler {
 
   //hooks
   void hook() {}
-  public FskPortObject getEmbedFSKObject(CombinedFskPortObject comFskObj) {
-    FskPortObject embedFSKObject = comFskObj.getFirstFskPortObject();
-    if (embedFSKObject instanceof CombinedFskPortObject) {
-      embedFSKObject = getEmbedFSKObject((CombinedFskPortObject) embedFSKObject);
-    }
-    return embedFSKObject;
+  
+  public String getFileExtention() {
+    
+    
+    return fileExtention;
   }
   
   
@@ -274,9 +280,21 @@ public abstract class ScriptHandler {
   public static ScriptHandler createHandler(String script_type) {
     if(script_type.toLowerCase().startsWith("r"))
       return new RScriptHandler();
-    
-    
-    return null;
+    if(script_type.toLowerCase().startsWith("py"))
+      return new PythonScriptHandler();
+    return new RScriptHandler();
   }
 
+  public static ArchiveEntry addRScript(final CombineArchive archive, final String script,
+      final String filename) throws IOException, URISyntaxException {
+
+    final File file = File.createTempFile("temp","");
+    FileUtils.writeStringToFile(file, script, "UTF-8");
+//  TODO: automate in some way
+    final ArchiveEntry entry = archive.addEntry(file, filename, FSKML.getURIS(1, 0, 12).get("r"));
+    file.delete();
+
+    return entry;
+  }
+  
 }

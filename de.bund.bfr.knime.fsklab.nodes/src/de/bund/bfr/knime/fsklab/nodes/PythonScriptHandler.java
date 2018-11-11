@@ -17,7 +17,9 @@ public class PythonScriptHandler extends ScriptHandler {
   
 
   
-
+  public PythonScriptHandler() {
+    fileExtention = "py";
+  }
 
   @Override
   FskPortObject runSnippet(AutoCloseable controller, FskPortObject fskObj, FskSimulation simulation,
@@ -37,8 +39,9 @@ public class PythonScriptHandler extends ScriptHandler {
   }
 
   @Override
-  public void runScript(String script, ExecutionContext exec, Boolean showErrors) throws Exception {
-    ((PythonKernel)controller).execute(script, exec);
+  public String[] runScript(String script, ExecutionContext exec, Boolean showErrors) throws Exception {
+    
+    return ((PythonKernel)controller).execute(script, exec);
     
   }
 
@@ -142,5 +145,7 @@ public class PythonScriptHandler extends ScriptHandler {
     // TODO Auto-generated method stub
     
   }
+
+
 
 }

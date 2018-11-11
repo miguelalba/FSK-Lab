@@ -77,7 +77,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
   private final RunnerNodeInternalSettings internalSettings = new RunnerNodeInternalSettings();
 
   private RunnerNodeSettings nodeSettings = new RunnerNodeSettings();
-
+  ScriptHandler handler;
   // Input and output port types
   private static final PortType[] IN_TYPES = {FskPortObject.TYPE};
   private static final PortType[] OUT_TYPES = {FskPortObject.TYPE, ImagePortObject.TYPE_OPTIONAL};
@@ -125,13 +125,14 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
   protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
       throws InvalidSettingsException {
     nodeSettings.load(settings);
+    
   }
 
   @Override
   protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
     return new PortObjectSpec[] {FSK_SPEC, PNG_SPEC};
   }
-  ScriptHandler handler;
+ 
   @Override
   protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
     JOptionPane.showMessageDialog(null, "Hello world");
@@ -485,7 +486,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
   
     exec.setProgress(0.72, "Set parameter values");
     LOGGER.info(" Running with '" + simulation.getName() + "' simulation!");
-    String paramScript = NodeUtils.buildParameterScript(simulation);
+    String paramScript = handler.buildParameterScript(simulation);
     //executor.execute(paramScript, exec);
     handler.runScript(paramScript, exec, true);
 

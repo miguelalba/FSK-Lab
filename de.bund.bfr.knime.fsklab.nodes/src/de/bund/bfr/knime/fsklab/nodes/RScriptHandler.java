@@ -8,6 +8,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
+import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPMismatchException;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskSimulation;
@@ -20,13 +21,20 @@ public class RScriptHandler extends ScriptHandler {
 
    ScriptExecutor executor;
   
-  public void setController( ExecutionContext exec) throws Exception {
+  
+   
+   public RScriptHandler() {
+     fileExtention = "r";
+   }
+   
+   public void setController( ExecutionContext exec) throws Exception {
     
     this.controller = new RController();
     
     this.executor = new ScriptExecutor((RController)controller);
     
   }
+  
   
   
  
@@ -165,18 +173,21 @@ public class RScriptHandler extends ScriptHandler {
    }
   
   @Override
-  public void runScript(String script,
+  public String[] runScript(String script,
       ExecutionContext exec,
       Boolean showErrors) throws Exception{
   
     
-   
     
     if(showErrors) {
-      executor.execute(script, exec);
+      REXP c = executor.execute(script, exec);
+      String[] execResult = c.asStrings();
+      return execResult;
     }else {
       executor.executeIgnoreResult(script, exec);
     }
+    return null;
+    
   }
   
   
@@ -279,4 +290,6 @@ public class RScriptHandler extends ScriptHandler {
     executor.finishOutputCapturing(exec);
     
   }
+
+ 
 }

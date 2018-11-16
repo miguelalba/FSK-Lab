@@ -479,6 +479,8 @@ public class FskPortObject implements PortObject {
     metaDataPane.setName("Meta data");
 
     final JPanel librariesPanel = UIUtils.createLibrariesPanel(packages);
+    
+    
 
     JPanel simulationsPanel = new SimulationsPanel();
 

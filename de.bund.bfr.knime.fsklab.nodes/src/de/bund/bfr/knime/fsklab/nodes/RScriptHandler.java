@@ -2,6 +2,7 @@ package de.bund.bfr.knime.fsklab.nodes;
 
 
 import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.knime.core.node.ExecutionContext;
@@ -20,7 +21,7 @@ import de.bund.bfr.knime.fsklab.r.client.IRController.RException;
 public class RScriptHandler extends ScriptHandler {
 
    ScriptExecutor executor;
-  
+
   
    
    public RScriptHandler() {
@@ -170,6 +171,7 @@ public class RScriptHandler extends ScriptHandler {
   public void setWorkingDirectory(Path workingDirectory) throws Exception{
       
     ((RController)controller).setWorkingDirectory(workingDirectory);
+    
    }
   
   @Override
@@ -289,6 +291,21 @@ public class RScriptHandler extends ScriptHandler {
   public void finishOutputCapturing(ExecutionContext exec) throws Exception {
     executor.finishOutputCapturing(exec);
     
+  }
+
+  @Override
+  public String getPackageVersionCommand(String pkg_name) {
+    String command = "packageDescription(\"" + pkg_name + "\")$Version";
+    return command;
+  }
+
+  @Override
+  public String getPackageVersionCommand(List<String> pkg_names) {
+    String command =
+        "available.packages(contriburl = contrib.url(c(\"https://cloud.r-project.org/\"), \"both\"))[c('"
+            + pkg_names.stream().collect(Collectors.joining("','")) + "'),]";
+    
+    return command;
   }
 
  

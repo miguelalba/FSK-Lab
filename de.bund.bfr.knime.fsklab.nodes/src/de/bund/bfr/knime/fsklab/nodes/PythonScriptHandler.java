@@ -1,7 +1,10 @@
 package de.bund.bfr.knime.fsklab.nodes;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -12,10 +15,12 @@ import org.knime.python2.kernel.PythonKernelOptions;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskSimulation;
 
+
 public class PythonScriptHandler extends ScriptHandler {
 
   
-
+  String std_out = "";
+  String std_err = "";
   
   public PythonScriptHandler() {
     fileExtention = "py";
@@ -32,6 +37,7 @@ public class PythonScriptHandler extends ScriptHandler {
 
   @Override
   public void setController(ExecutionContext exec) throws Exception {
+    
     PythonKernelOptions m_kernelOptions = new PythonKernelOptions();
     
     controller = new PythonKernel(m_kernelOptions);
@@ -41,7 +47,10 @@ public class PythonScriptHandler extends ScriptHandler {
   @Override
   public String[] runScript(String script, ExecutionContext exec, Boolean showErrors) throws Exception {
     
-    return ((PythonKernel)controller).execute(script, exec);
+    String[] output =((PythonKernel)controller).execute(script.replaceAll("<-", "="), exec);
+    std_out += output[0] + "\n";
+    std_err += output[1] + "\n";
+    return output;
     
   }
 
@@ -67,7 +76,9 @@ public class PythonScriptHandler extends ScriptHandler {
     String plot_setup = "import matplotlib\n" + 
         "matplotlib.use('Agg')";
     
-    ((PythonKernel)controller).execute(plot_setup, exec);
+    String [] output = ((PythonKernel)controller).execute(plot_setup, exec);
+    std_out += output[0] + "\n";
+    std_err += output[1] + "\n";
 
 
     // Get image path (with proper slashes)
@@ -78,8 +89,13 @@ public class PythonScriptHandler extends ScriptHandler {
     //if(fskObj.viz.contains(".show()"))
     
 
-    ((PythonKernel)controller).execute(fskObj.viz,exec);
-    ((PythonKernel)controller).execute(pngCommand,exec);
+    output = ((PythonKernel)controller).execute(fskObj.viz,exec);
+    std_out += output[0] + "\n";
+    std_err += output[1] + "\n";
+    output = ((PythonKernel)controller).execute(pngCommand,exec);
+    std_out += output[0] + "\n";
+    std_err += output[1] + "\n";
+    
     
   }
 
@@ -97,14 +113,14 @@ public class PythonScriptHandler extends ScriptHandler {
 
   @Override
   public String getStdOut() {
-    // TODO Auto-generated method stub
-    return null;
+
+    return std_out;
   }
 
   @Override
   public String getStdErr() {
-    // TODO Auto-generated method stub
-    return null;
+
+    return std_err;
   }
 
   @Override
@@ -116,7 +132,8 @@ public class PythonScriptHandler extends ScriptHandler {
   @Override
   public void cleanup(ExecutionContext exec) throws Exception {
     ((PythonKernel)controller).close();
-    
+    std_out = "";
+    std_err = "";
   }
 
 
@@ -142,8 +159,23 @@ public class PythonScriptHandler extends ScriptHandler {
 
   @Override
   public void finishOutputCapturing(ExecutionContext exec) throws Exception {
-    // TODO Auto-generated method stub
+ 
     
+  }
+
+  @Override
+  public String getPackageVersionCommand(String pkg_name) {
+    
+    String command = pkg_name + ".__version__";
+
+    return command;
+  }
+
+  @Override
+  public String getPackageVersionCommand(List<String> pkg_names) {
+    String command ="";
+       
+    return command;
   }
 
 

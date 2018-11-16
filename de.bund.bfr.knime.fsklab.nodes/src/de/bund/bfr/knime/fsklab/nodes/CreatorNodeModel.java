@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
@@ -49,7 +50,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
-import de.bund.bfr.fskml.RScript;
+import de.bund.bfr.fskml.ScriptFactory;
+import de.bund.bfr.fskml.Script;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskPortObjectSpec;
 import metadata.Assay;
@@ -123,10 +125,10 @@ class CreatorNodeModel extends NoInternalsModel {
       throws InvalidSettingsException, IOException {
 
     // Reads model script
-    RScript modelRScript = readScript(nodeSettings.modelScript);
+    Script modelRScript = readScript(nodeSettings.modelScript);
 
     // Reads visualization script
-    RScript vizRScript;
+    Script vizRScript;
     if (StringUtils.isNotEmpty(nodeSettings.visualizationScript)) {
       vizRScript = readScript(nodeSettings.visualizationScript);
     } else {
@@ -260,15 +262,17 @@ class CreatorNodeModel extends NoInternalsModel {
    * @throws InvalidSettingsException if {@link path} is null or whitespace.
    * @throws IOException if the file cannot be read.
    */
-  private static RScript readScript(final String path)
+  private static Script readScript(final String path)
       throws InvalidSettingsException, IOException {
     String trimmedPath = StringUtils.trimToNull(path.trim());
 
     // path is not null or whitespace, thus try to read it
     try {
       // may throw IOException
+      
       File fScript = FileUtil.getFileFromURL(FileUtil.toURL(trimmedPath));
-      RScript script = new RScript(fScript);
+      
+      Script script = ScriptFactory.createScript(fScript);
       return script;
     } catch (IOException e) {
       LOGGER.error(e.getMessage());

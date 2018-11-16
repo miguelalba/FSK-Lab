@@ -60,8 +60,8 @@ public abstract class ScriptHandler {
   public abstract void addScriptToArchive();
   
   public abstract void cleanup(ExecutionContext exec)throws Exception;
-  
-
+  public abstract String getPackageVersionCommand(String pkg_name);
+  public abstract String getPackageVersionCommand(List<String> pkg_names);
   
   
 //  //protected static final NodeLogger LOGGER = NodeLogger.getLogger("Fskx Runner Node Model");
@@ -278,6 +278,7 @@ public abstract class ScriptHandler {
   
   //static methods
   public static ScriptHandler createHandler(String script_type) {
+ 
     if(script_type.toLowerCase().startsWith("r"))
       return new RScriptHandler();
     if(script_type.toLowerCase().startsWith("py"))

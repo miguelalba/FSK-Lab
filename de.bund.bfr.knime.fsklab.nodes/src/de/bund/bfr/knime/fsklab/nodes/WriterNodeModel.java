@@ -362,7 +362,8 @@ class WriterNodeModel extends NoInternalsModel {
           try {
             //REXP c = executor.execute("packageDescription(\"" + pkg + "\")$Version", exec);
             //String[] execResult = c.asStrings();
-            String command = "packageDescription(\"" + pkg + "\")$Version";
+            //String command = "packageDescription(\"" + pkg + "\")$Version";
+            String command = scriptHandler.getPackageVersionCommand(pkg);
             String[] execResult = scriptHandler.runScript(command, exec,true);
             rBuilder.add(getJsonObject(pkg, execResult[0]));
             
@@ -380,9 +381,10 @@ class WriterNodeModel extends NoInternalsModel {
         //TODO: abstract runScript
         if (packagesWithoutInfo.size() > 0) {
           try { 
-            String command =
-                "available.packages(contriburl = contrib.url(c(\"https://cloud.r-project.org/\"), \"both\"))[c('"
-                    + packagesWithoutInfo.stream().collect(Collectors.joining("','")) + "'),]";
+//            String command =
+//                "available.packages(contriburl = contrib.url(c(\"https://cloud.r-project.org/\"), \"both\"))[c('"
+//                    + packagesWithoutInfo.stream().collect(Collectors.joining("','")) + "'),]";
+            String command = scriptHandler.getPackageVersionCommand(packagesWithoutInfo);
             //REXP cExternal = executor.execute(command, exec);
             //String[] execResult = cExternal.asStrings();
             String[] execResult = scriptHandler.runScript(command, exec, true);

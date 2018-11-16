@@ -463,7 +463,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
     exec.setProgress(0.1, "Setting up output capturing");
     //handler.setupOutputCapturing(exec);
     handler.setupOutputCapturing(exec);
-
+    
     // Install needed libraries
     if (!fskObj.packages.isEmpty()) {
 //      try {

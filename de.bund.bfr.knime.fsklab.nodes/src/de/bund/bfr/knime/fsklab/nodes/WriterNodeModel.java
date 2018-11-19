@@ -164,11 +164,11 @@ class WriterNodeModel extends NoInternalsModel {
     
     addVersion(archive);
     // Adds model script
-    final ArchiveEntry modelEntry = addRScript(archive, fskObj.model, filePrefix + "model." + scriptHandler.getFileExtention());
+    final ArchiveEntry modelEntry = addRScript(archive, fskObj.model, filePrefix + "model." + scriptHandler.getFileExtension());
     modelEntry.addDescription(new FskMetaDataObject(ResourceType.modelScript).metaDataObject);
 
     // Adds visualization script
-    final ArchiveEntry vizEntry = addRScript(archive, fskObj.viz, filePrefix + "visualization." + scriptHandler.getFileExtention());
+    final ArchiveEntry vizEntry = addRScript(archive, fskObj.viz, filePrefix + "visualization." + scriptHandler.getFileExtension());
     vizEntry.addDescription(new FskMetaDataObject(ResourceType.visualizationScript).metaDataObject);
 
     // Adds R workspace file
@@ -290,7 +290,7 @@ class WriterNodeModel extends NoInternalsModel {
   protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 
     FskPortObject in = (FskPortObject) inObjects[0];
-    scriptHandler = ScriptHandler.createHandler(in.generalInformation.getLanguageWrittenIn());
+    scriptHandler = ScriptHandlerFactory.createHandler(in.generalInformation.getLanguageWrittenIn());
     URL url = FileUtil.toURL(nodeSettings.filePath);
     Path localPath = FileUtil.resolveToPath(url);
 
@@ -620,7 +620,7 @@ class WriterNodeModel extends NoInternalsModel {
     SteadyState simulation = new SteadyState("steadyState", "", new Algorithm(" "));
     {
       SourceScript ss =
-          new SourceScript("https://iana.org/assignments/mediatypes/text/x-"+scriptHandler.getFileExtention(), "./param."+scriptHandler.getFileExtention());
+          new SourceScript("https://iana.org/assignments/mediatypes/text/x-"+scriptHandler.getFileExtension(), "./param."+scriptHandler.getFileExtension());
       simulation.addAnnotation(new Annotation(ss));
     }
     sedml.addSimulation(simulation);
@@ -629,7 +629,7 @@ class WriterNodeModel extends NoInternalsModel {
 
       // Add model
       Model model = new Model(fskSimulation.getName(), "",
-          "https://iana.org/assignments/mediatypes/text/x-"+scriptHandler.getFileExtention(), "./model."+scriptHandler.getFileExtention());
+          "https://iana.org/assignments/mediatypes/text/x-"+scriptHandler.getFileExtension(), "./model."+scriptHandler.getFileExtension());
       sedml.addModel(model);
 
       // Add task
@@ -655,7 +655,7 @@ class WriterNodeModel extends NoInternalsModel {
     // Add plot
     {
       SourceScript ss =
-          new SourceScript("https://iana.org/assignments/mediatypes/text/x-" + scriptHandler.getFileExtention(), "./visualization." + scriptHandler.getFileExtention());
+          new SourceScript("https://iana.org/assignments/mediatypes/text/x-" + scriptHandler.getFileExtension(), "./visualization." + scriptHandler.getFileExtension());
 
       Plot2D plot = new Plot2D("plot1", "");
       plot.addAnnotation(new Annotation(ss));
@@ -695,7 +695,7 @@ class WriterNodeModel extends NoInternalsModel {
     // Only save R workspace smaller than 100 MB
     if (fileSizeInMB < 100) {
       final ArchiveEntry workspaceEntry = archive.addEntry(workspace.toFile(),
-          filePrefix + "workspace."+scriptHandler.getFileExtention(), FSKML.getURIS(1, 0, 12).get(scriptHandler.getFileExtention()));
+          filePrefix + "workspace."+scriptHandler.getFileExtension(), FSKML.getURIS(1, 0, 12).get(scriptHandler.getFileExtension()));
       workspaceEntry.addDescription(new FskMetaDataObject(ResourceType.workspace).metaDataObject);
     } else {
       LOGGER.warn("Results file larger than 100 MB -> Skipping file");
@@ -708,11 +708,11 @@ class WriterNodeModel extends NoInternalsModel {
 
     String script = scriptHandler.buildParameterScript(simulation);
 
-    File tempFile = File.createTempFile("temp", "."+scriptHandler.getFileExtention());
+    File tempFile = File.createTempFile("temp", "."+scriptHandler.getFileExtension());
     FileUtils.writeStringToFile(tempFile, script, "UTF-8");
     
-    String targetName = filePrefix + "simulations/" + simulation.getName() + "."+scriptHandler.getFileExtention();
-    archive.addEntry(tempFile, targetName, FSKML.getURIS(1, 0, 12).get(scriptHandler.getFileExtention()));
+    String targetName = filePrefix + "simulations/" + simulation.getName() + "."+scriptHandler.getFileExtension();
+    archive.addEntry(tempFile, targetName, FSKML.getURIS(1, 0, 12).get(scriptHandler.getFileExtension()));
 
     tempFile.delete();
   }

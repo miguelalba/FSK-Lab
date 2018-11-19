@@ -8,7 +8,7 @@ public class PythonScriptHandlerTest {
 
 	@Test
 	public void test() {
-		ScriptHandler handler = ScriptHandler.createHandler("py");
+		ScriptHandler handler = ScriptHandlerFactory.createHandler("py");
 		assertTrue(handler.getStdOut().isEmpty());
 	}
 

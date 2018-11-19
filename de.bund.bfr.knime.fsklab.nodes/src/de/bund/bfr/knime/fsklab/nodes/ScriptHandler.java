@@ -1,3 +1,21 @@
+/*
+ ***************************************************************************************************
+ * Copyright (c) 2017 Federal Institute for Risk Assessment (BfR), Germany
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program. If
+ * not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors: Department Biological Safety - BfR
+ *************************************************************************************************
+ */
 package de.bund.bfr.knime.fsklab.nodes;
 import java.io.File;
 import java.io.IOException;
@@ -11,9 +29,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.util.FileUtil;
 import org.knime.python2.kernel.PythonKernel;
 import de.bund.bfr.fskml.FSKML;
@@ -27,275 +52,145 @@ import de.unirostock.sems.cbarchive.CombineArchive;
 import metadata.Parameter;
 import metadata.ParameterClassification;
 
+/**
+ * Abstract class defining methods to handle external script code.
+ * More specifically, it defines:
+ * <ul>
+ * <li>setting up the working directory in which the script code is executed </li>
+ * <li>setting up and finishing the output-capturing of executed script code </li>
+ * <li>setting up the way in which Eclipse and the script interpreter communicate  </li>
+ * <li>running a script</li>
+ * <li>installing libraries</li>
+ * <li>building the parameter script</li>
+ * <li>saving an image to a file</li>
+ * <li>restoring the library of the interpreter to its default state</li>
+ * <li>storing the workspace in a file </li>
+ * <li>getting the standard output and standard error output </li>
+ * <li>getting the file extension based on the language used in the script files </li>
+ * <li>getting the script command to determine the version of a package according to the specific language </li>
+ * </ul>
+ * Derived classes must overwrite all of the methods, however, certain ones can be left empty based on the language requirements
+ *
+ * @author Thomas Schueler, Federal Institute for Risk Assessment
+ */
 public abstract class ScriptHandler {
   
   
-  AutoCloseable controller;
-  String fileExtention = "";
-  
+  /**
+   * Set the directory in which the interpreter can temporarily save data while executing the script 
+   * @param workingDirectory The directory in which the script code is executed
+   * @throws Exception if an error occurs accessing the directory
+   */
   public abstract void setWorkingDirectory(Path workingDirectory)throws Exception;
+  /**
+   * Needed if the interpreter requires specific code necessary for starting output capturing.
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception 
+   */
   public abstract void setupOutputCapturing(ExecutionContext exec) throws Exception;
+  
+  /**
+   * Needed if interpreter requires specific code for retrieving captured output 
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception
+   */
   public abstract void finishOutputCapturing(ExecutionContext exec) throws Exception;
+  
+  /**
+   * Set up the way in which Eclipse and the script interpreter communicate. 
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception
+   */
   public abstract void setController(ExecutionContext exec) throws Exception;
   public abstract String[] runScript(String script,
       ExecutionContext exec,
       Boolean showErrors)throws Exception;
   
-  
+  /**
+   * install library packages necessary for running the scripts 
+   * @param fskObj A {@link FSKPortObject} containing the model scripts
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @param LOGGER A {@link NodeLogger} that keeps track of the progress during the execution of the node 
+   * @throws Exception
+   */
   public abstract void installLibs(final FskPortObject fskObj,ExecutionContext exec,NodeLogger LOGGER)throws Exception;
   
+  /**
+   * 
+   * @param simulation Part of {@link FSKPortObject} which contains the parameter list of the chosen simulation
+   * @return A script in the concrete language containing a list of parameters and their values (e.g. "x <- 1.0 \n id <- 'model1'")
+   */
   public abstract String buildParameterScript(final FskSimulation simulation);
 
+  /**
+   * 
+   * @param internalSettings internal settings to store the image file of the plot
+   * @param nodeSettings   settings of the node containing the dimensions of the output image 
+   * @param fskObj A {@link FSKPortObject} containing the model scripts
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception
+   */
   public abstract void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
       RunnerNodeSettings nodeSettings,
       final FskPortObject fskObj,  
       ExecutionContext exec) throws Exception;
       
-
+  /**
+   * Restore library trees to the default library.
+   * @throws Exception
+   */
   public abstract void restoreDefaultLibrary()throws Exception;
-  
+
+  /**
+   * Save the workspace in the session to a file linked to by a path in the {@link FSKPortObject.workspace}.
+   * 
+   * @param fskObj A {@link FSKPortObject} containing the model scripts
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception
+   */
   public abstract void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception;
-  public abstract String getStdOut();
-  public abstract String getStdErr();
-  public abstract void addScriptToArchive();
   
+  /**
+   * 
+   * @return The output generated by the last {@link #runScript(String, ExecutionContext)} call.
+   */
+  public abstract String getStdOut();
+
+  /**
+   * 
+   * @return The error output generated by the last {@link #runScript(String, ExecutionContext)} call.
+   */
+  public abstract String getStdErr();
+
+  /**
+   * Cleanup temporary variables, which were created during output capturing and execution
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @throws Exception
+   */
   public abstract void cleanup(ExecutionContext exec)throws Exception;
+  
+  /**
+   * Returns the script code to have the interpreter acquire the version number of a package
+   * @param pkg_name The name of the package
+   * @return The command have the interpreter return the version of the package  (e.g. in R: "packageDescription(\"RServe")$Version" 
+   */
   public abstract String getPackageVersionCommand(String pkg_name);
+  
+  /**
+   * Returns the script code to have the interpreter acquire the version number of all available packages (e.g. in R: available.packages(...))
+   * @param pkg_names a list of packages whose version need to be determined
+   * @return the command to have the interpreter return a list of available packages
+   */
   public abstract String getPackageVersionCommand(List<String> pkg_names);
   
   
-//  //protected static final NodeLogger LOGGER = NodeLogger.getLogger("Fskx Runner Node Model");
-//  
-//  
-//  protected RunnerNodeInternalSettings internalSettings;
-//
-//  protected RunnerNodeSettings nodeSettings;
-//  
-//  
-//  
-//  //template methods
-//  public final FskPortObject runFskPortObject(FskPortObject fskObj, ExecutionContext exec,
-//      AutoCloseable controller) throws Exception{
-//    LOGGER.info("Running Model: " + fskObj);
-//    if (fskObj instanceof CombinedFskPortObject) {
-//      CombinedFskPortObject comFskObj = (CombinedFskPortObject) fskObj;
-//      List<JoinRelation> joinRelations = comFskObj.getJoinerRelation();
-//      FskPortObject firstFskObj = comFskObj.getFirstFskPortObject();
-//      if (firstFskObj instanceof CombinedFskPortObject) {
-//        firstFskObj = runFskPortObject(firstFskObj, exec, controller);
-//      }
-//      FskPortObject secondFskObj = comFskObj.getSecondFskPortObject();
-//      // apply join command for complex join
-//      if (secondFskObj instanceof CombinedFskPortObject) {
-//        FskPortObject embedFSKObject = getEmbedFSKObject((CombinedFskPortObject) secondFskObj);
-//        if (joinRelations != null) {
-//          List<Parameter> alternativeParams = firstFskObj.modelMath.getParameter().stream()
-//              .filter(p -> p.getParameterID().endsWith(JoinerNodeModel.suffix))
-//              .collect(Collectors.toList());
-//          for (Parameter param : alternativeParams) {
-//            // if (!(param.getParameterClassification().equals(ParameterClassification.INPUT)
-//            // || param.getParameterClassification().equals(ParameterClassification.CONSTANT))) {
-//            String alternativeId = param.getParameterID();
-//            String oldId = param.getParameterID().substring(0,
-//                param.getParameterID().indexOf(JoinerNodeModel.suffix));
-////!!            controller.eval(alternativeId + " <- " + oldId, false);
-//            
-//            // controller.eval("rm(" + oldId + ")", false);
-//            // }
-//          }
-//          for (JoinRelation joinRelation : joinRelations) {
-//            for (metadata.Parameter sourceParameter : firstFskObj.modelMath.getParameter()) {
-//
-//              if (joinRelation.getSourceParam().getParameterID()
-//                  .equals(sourceParameter.getParameterID())) {
-//                // override the value of the target parameter with the value generated by the
-//                // command
-//                for (FskSimulation sim : embedFSKObject.simulations) {
-//                  final String embedParametername = joinRelation.getTargetParam().getParameterID();
-//                  List<Parameter> params = embedFSKObject.modelMath.getParameter().stream()
-//                      .filter(p -> embedParametername.startsWith(p.getParameterID()))
-//                      .collect(Collectors.toList());
-//
-//                  sim.getParameters().put(params.get(0).getParameterID(),
-//                      joinRelation.getCommand());
-//                }
-//
-//              }
-//            }
-//          }
-//        }
-//
-//        secondFskObj = runFskPortObject(secondFskObj, exec, controller);
-//      }
-//
-//
-//      LOGGER.info(" recieving '" + firstFskObj.selectedSimulationIndex
-//          + "' as the selected simulation index!");
-//
-//      // get the index of the selected simulation saved by the JavaScript FSK Simulation
-//      // Configurator the default value is 0 which is the the default simulation
-//      ExecutionContext context = exec.createSubExecutionContext(1.0);
-//
-//      FskSimulation fskSimulation =
-//          firstFskObj.simulations.get(firstFskObj.selectedSimulationIndex);
-//      // recreate the INPUT or CONSTANT parameters which cause parameterId conflicts
-//      List<Parameter> alternativeParams = firstFskObj.modelMath.getParameter().stream()
-//          .filter(p -> p.getParameterID().endsWith(JoinerNodeModel.suffix))
-//          .collect(Collectors.toList());
-//      for (Parameter param : alternativeParams) {
-//        if (param.getParameterClassification().equals(ParameterClassification.INPUT)
-//            || param.getParameterClassification().equals(ParameterClassification.CONSTANT)) {
-//          // cut out the old Parameter ID
-//          String oldId = param.getParameterID().substring(0,
-//              param.getParameterID().indexOf(JoinerNodeModel.suffix));
-//          // make the old parameter available for the Model script
-////!!          controller.eval(oldId + " <- " + param.getParameterValue(), false);
-//        }
-//      }
-//
-//      // make a map of file name and its last modification date to observe any changes which
-//      // means file overwriting or generating new one
-//      String wd1 = firstFskObj.getWorkingDirectory();
-//      String wd2 = secondFskObj.getWorkingDirectory();
-//
-//      Map<String, Long> fileModifacationMap = new HashMap<>();
-//      if (!wd1.isEmpty() && !wd2.isEmpty() && !wd1.equals(wd2)) {
-//        try (Stream<Path> paths =
-//            Files.walk(FileUtil.getFileFromURL(FileUtil.toURL(wd1)).toPath())) {
-//          paths.filter(Files::isRegularFile).forEach(currentFile -> {
-//            fileModifacationMap.put(currentFile.toFile().getName(),
-//                currentFile.toFile().lastModified());
-//          });
-//        }
-//      }
-//
-//      // run the first model!
-//      LOGGER.info("Running Snippet of first Model: " + firstFskObj);
-//      firstFskObj = runSnippet(controller, firstFskObj, fskSimulation, context);
-//
-//      // move the generated files to the working
-//      // directory of the second model
-//      if (!wd1.isEmpty() && !wd2.isEmpty() && !wd1.equals(wd2)) {
-//        Path targetDirectory = FileUtil.getFileFromURL(FileUtil.toURL(wd2)).toPath();
-//        try (Stream<Path> paths =
-//            Files.walk(FileUtil.getFileFromURL(FileUtil.toURL(wd1)).toPath())) {
-//          paths.filter(Files::isRegularFile).forEach(currentFile -> {
-//            // move new and modified files
-//            Long fileLastModified = fileModifacationMap.get(currentFile.toFile().getName());
-//            if (fileLastModified == null
-//                || currentFile.toFile().lastModified() != fileLastModified) {
-//              try {
-//                FileUtils.copyFileToDirectory(currentFile.toFile(), targetDirectory.toFile());
-//              } catch (IOException e) {
-//                e.printStackTrace();
-//              }
-//            }
-//          });
-//        }
-//      }
-//
-//
-//      // assign the value of parameters which are causing parameterId conflicts to alternative
-//      // Parameter which is (maybe) used later in the joining
-//
-//      for (Parameter param : alternativeParams) {
-//        // if (!(param.getParameterClassification().equals(ParameterClassification.INPUT)
-//        // || param.getParameterClassification().equals(ParameterClassification.CONSTANT))) {
-//        String alternativeId = param.getParameterID();
-//        String oldId = param.getParameterID().substring(0,
-//            param.getParameterID().indexOf(JoinerNodeModel.suffix));
-////!!       controller.eval(alternativeId + " <- " + oldId, false);
-//        // controller.eval("rm(" + oldId + ")", false);
-//        // }
-//      }
-//
-//      // apply join command
-//      if (joinRelations != null) {
-//
-//        for (JoinRelation joinRelation : joinRelations) {
-//          for (metadata.Parameter sourceParameter : firstFskObj.modelMath.getParameter()) {
-//
-//            if (joinRelation.getSourceParam().getParameterID()
-//                .equals(sourceParameter.getParameterID())) {
-//              // override the value of the target parameter with the value generated by the
-//              // command
-//              for (FskSimulation sim : secondFskObj.simulations) {
-//                sim.getParameters().put(joinRelation.getTargetParam().getParameterID(),
-//                    joinRelation.getCommand());
-//              }
-//            }
-//          }
-//        }
-//      }
-//
-//      // get the index of the selected simulation saved by the JavaScript FSK Simulation
-//      // Configurater the default value is 0 which is the the default simulation
-//      FskSimulation secondfskSimulation =
-//          secondFskObj.simulations.get(secondFskObj.selectedSimulationIndex);
-//      LOGGER.info("Running Snippet of second Model: " + secondFskObj);
-//      secondFskObj = runSnippet(controller, secondFskObj, secondfskSimulation, context);
-//      fskObj.workspace = secondFskObj.workspace;
-//
-//      return comFskObj;
-//    } else {
-//      LOGGER.info(
-//          " recieving '" + fskObj.selectedSimulationIndex + "' as the selected simulation index!");
-//
-//
-//      // get the index of the selected simulation saved by the JavaScript FSK Simulation
-//      // Configurator the default value is 0 which is the the default simulation
-//      FskSimulation fskSimulation = fskObj.simulations.get(fskObj.selectedSimulationIndex);
-//
-//      ExecutionContext context = exec.createSubExecutionContext(1.0);
-//
-//      fskObj = runSnippet(controller, fskObj, fskSimulation, context);
-//
-//      return fskObj;
-//    }
-//      
-//    //return runSnippet();
-//  }
-  
-//  public final void plot(RunnerNodeInternalSettings internalSettings,
-//      RunnerNodeSettings nodeSettings) {}
-//  
-  //abstact methods for concrete subclasses
-//  abstract void simpleOperation()throws Exception;
 
-  abstract FskPortObject runSnippet(final AutoCloseable controller, final FskPortObject fskObj,
-      final FskSimulation simulation, final ExecutionMonitor exec)throws Exception;
-  
+  /**
+   * 
+   * @return The file extension of script files of the specific language (e.g. in R: return value would be "r" )
+   */
+  public abstract String getFileExtension();
 
-  //hooks
-  void hook() {}
-  
-  public String getFileExtention() {
-    
-    
-    return fileExtention;
-  }
-  
-  
-  //static methods
-  public static ScriptHandler createHandler(String script_type) {
  
-    if(script_type.toLowerCase().startsWith("r"))
-      return new RScriptHandler();
-    if(script_type.toLowerCase().startsWith("py"))
-      return new PythonScriptHandler();
-    return new RScriptHandler();
-  }
-
-  public static ArchiveEntry addRScript(final CombineArchive archive, final String script,
-      final String filename) throws IOException, URISyntaxException {
-
-    final File file = File.createTempFile("temp","");
-    FileUtils.writeStringToFile(file, script, "UTF-8");
-//  TODO: automate in some way
-    final ArchiveEntry entry = archive.addEntry(file, filename, FSKML.getURIS(1, 0, 12).get("r"));
-    file.delete();
-
-    return entry;
-  }
   
 }

@@ -135,9 +135,9 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
  
   @Override
   protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-    JOptionPane.showMessageDialog(null, "Hello world");
+    //JOptionPane.showMessageDialog(null, "Hello world");
     FskPortObject fskObj = (FskPortObject) inData[0];
-    handler = ScriptHandler.createHandler(fskObj.generalInformation.getLanguageWrittenIn());
+    handler = ScriptHandlerFactory.createHandler(fskObj.generalInformation.getLanguageWrittenIn());
     try  {
       handler.setController(exec);
       fskObj = runFskPortObject(fskObj, exec);
@@ -344,105 +344,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
       return fskObj;
     }
   }
-  public FskPortObject runPythonSnippet(final FskPortObject fskObj,
-      final FskSimulation simulation,
-      final ExecutionContext exec)
-       throws Exception {
-   //EXECUTE PYTHON
-     
-     PythonKernelOptions m_kernelOptions = new PythonKernelOptions();
-     //m_kernelOptions.setPythonVersionOption(PythonVersionOption.PYTHON2);
-     //m_kernelOptions.setKernelScriptPath();
-         //Config myConf = new PythonScriptNodeConfig();
-     PythonKernel kernel = new PythonKernel(m_kernelOptions);
-     
-//     kernel.putFlowVariables(PythonScriptNodeConfig.getVariableNames().getFlowVariables(),
-//         getAvailableFlowVariables().values());
-//     kernel.putDataTable(PythonScriptNodeConfig.getVariableNames().getInputTables()[0], inData[0],
-//         exec.createSubProgress(0.3));
-//     String code = "with open(\"d:/testfile.txt\",\"w\") as f:\n" + 
-//         "    f.write(\"Hello Python_2\")\n";
- //
-//     String myPath = "d:/testplot.png";//internalSettings.imageFile.getAbsolutePath();
-//     code = fskObj.viz;
-//     code += "\n plt.savefig(\"d:/testplot2.png\")\n";
-       
-      
-//     fskObj.setPlot(myPath);
-//     final String[] output = kernel.execute(code);
-//     setExternalOutput(new LinkedList<String>(Arrays.asList(output[0].split("\n"))));
-//     setExternalErrorOutput(new LinkedList<String>(Arrays.asList(output[1].split("\n"))));
-//     exec.createSubProgress(0.4).setProgress(1);
-//     final Collection<FlowVariable> variables =
-//             kernel.getFlowVariables(PythonScriptNodeConfig.getVariableNames().getFlowVariables());
-//     table = kernel.getDataTable(PythonScriptNodeConfig.getVariableNames().getOutputTables()[0], exec,
-//         exec.createSubProgress(0.3));
-//     addNewVariables(variables);
-       
-       
-       
- //END EXECUTE PYTHON      
-
-
-     // Sets up working directory with resource files. This directory needs to be deleted.
-   
-     // START RUNNING MODEL
-
-     // Install needed libraries
-
-     exec.setMessage("Set parameter values");
-     LOGGER.info(" Running with '" + simulation.getName() + "' simulation!");
-     String paramScript = NodeUtils.buildParameterScript(simulation);
-     paramScript = paramScript.replace("<-","=");
-     kernel.execute(paramScript,exec);
-//   executor.execute(paramScript, exec);
-
-     exec.setMessage("Run models script");
-     kernel.execute(fskObj.model,exec);
-//   executor.executeIgnoreResult(fskObj.model, exec);
-
-     exec.setMessage("Run visualization script");
-     try {
-       // Initialize necessary R stuff to plot
-
-       String plot_setup = "import matplotlib\n" + 
-           "matplotlib.use('Agg')";
-       kernel.execute(plot_setup, exec);
-
-
-       // Get image path (with proper slashes)
-       final String path = FilenameUtils.separatorsToUnix(internalSettings.imageFile.getAbsolutePath());
-
-       // Gets values
-       String pngCommand = "fig.savefig('" + path + "')";
-       //if(fskObj.viz.contains(".show()"))
-       
-
-       kernel.execute(fskObj.viz,exec);
-       kernel.execute(pngCommand,exec);
-       // Save path of generated plot
-       fskObj.setPlot(internalSettings.imageFile.getAbsolutePath());
-     } catch (final Exception exception) {
-       LOGGER.warn("Visualization script failed", exception);
-     }
-
-     
-     // END RUNNING MODEL
-
-     // Save workspace
-     if (fskObj.workspace == null) {
-       fskObj.workspace = FileUtil.createTempFile("workspace", ".R").toPath();
-     }
-//   controller.saveWorkspace(fskObj.workspace, exec);
-
-     // process the return value of error capturing and update error and
-     // output views accordingly
-     // cleanup temporary variables of output capturing and consoleLikeCommand stuff
-     exec.setMessage("Cleaning up");
-     kernel.close();
-
-     return fskObj;
-   }
+ 
   private FskPortObject runSnippet( final FskPortObject fskObj,
       final FskSimulation simulation, final ExecutionContext exec) throws Exception {
 
@@ -512,7 +414,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 
     exec.setProgress(0.98, "Collecting captured output");
     //executor.finishOutputCapturing(exec);
-    //handler.finishOutputCapturing(exec);
+    handler.finishOutputCapturing(exec);
 
     // END RUNNING MODEL
 

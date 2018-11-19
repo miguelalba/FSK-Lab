@@ -22,16 +22,7 @@ public class PythonScriptHandler extends ScriptHandler {
   String std_out = "";
   String std_err = "";
   
-  public PythonScriptHandler() {
-    fileExtention = "py";
-  }
-
-  @Override
-  FskPortObject runSnippet(AutoCloseable controller, FskPortObject fskObj, FskSimulation simulation,
-      ExecutionMonitor exec) throws Exception {
-    
-    return fskObj;
-  }
+  PythonKernel controller;
 
   
 
@@ -46,8 +37,9 @@ public class PythonScriptHandler extends ScriptHandler {
 
   @Override
   public String[] runScript(String script, ExecutionContext exec, Boolean showErrors) throws Exception {
+     
+    String[] output = controller.execute(script.replaceAll("<-", "="), exec);
     
-    String[] output =((PythonKernel)controller).execute(script.replaceAll("<-", "="), exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
     return output;
@@ -76,7 +68,7 @@ public class PythonScriptHandler extends ScriptHandler {
     String plot_setup = "import matplotlib\n" + 
         "matplotlib.use('Agg')";
     
-    String [] output = ((PythonKernel)controller).execute(plot_setup, exec);
+    String [] output = controller.execute(plot_setup, exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
 
@@ -86,13 +78,13 @@ public class PythonScriptHandler extends ScriptHandler {
 
     // Gets values
     String pngCommand = "fig.savefig('" + path + "')";
-    //if(fskObj.viz.contains(".show()"))
+    
     
 
-    output = ((PythonKernel)controller).execute(fskObj.viz,exec);
+    output = controller.execute(fskObj.viz,exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
-    output = ((PythonKernel)controller).execute(pngCommand,exec);
+    output = controller.execute(pngCommand,exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
     
@@ -123,15 +115,11 @@ public class PythonScriptHandler extends ScriptHandler {
     return std_err;
   }
 
-  @Override
-  public void addScriptToArchive() {
-    // TODO Auto-generated method stub
-    
-  }
+
 
   @Override
   public void cleanup(ExecutionContext exec) throws Exception {
-    ((PythonKernel)controller).close();
+    controller.close();
     std_out = "";
     std_err = "";
   }
@@ -176,6 +164,13 @@ public class PythonScriptHandler extends ScriptHandler {
     String command ="";
        
     return command;
+  }
+
+
+  @Override
+  public String getFileExtension() {
+
+    return "py";
   }
 
 

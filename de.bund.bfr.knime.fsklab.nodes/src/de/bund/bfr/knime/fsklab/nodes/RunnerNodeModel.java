@@ -348,10 +348,13 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
   private FskPortObject runSnippet( final FskPortObject fskObj,
       final FskSimulation simulation, final ExecutionContext exec) throws Exception {
 
+    
+    handler.runSnippet(fskObj, simulation, exec, LOGGER, internalSettings, nodeSettings);
+    
     //final ScriptExecutor executor = new ScriptExecutor(controller);
 
     // Sets up working directory with resource files. This directory needs to be deleted.
-    exec.setProgress(0.05, "Add resource files");
+/*    exec.setProgress(0.05, "Add resource files");
     {
       String workingDirectoryString = fskObj.getWorkingDirectory();
       if (!workingDirectoryString.isEmpty()) {
@@ -425,7 +428,7 @@ public class RunnerNodeModel extends ExtToolOutputNodeModel {
 //    controller.saveWorkspace(fskObj.workspace, exec);
 
     handler.saveWorkspace(fskObj, exec);
-    
+*/    
     // process the return value of error capturing and update error and
     // output views accordingly
     if (!handler.getStdOut().isEmpty()) {

@@ -47,21 +47,21 @@ public class PythonScriptHandler extends ScriptHandler {
   }
 
   @Override
-  public void installLibs(FskPortObject fskObj, ExecutionContext exec, NodeLogger LOGGER)
+  void installLibs(FskPortObject fskObj, ExecutionContext exec, NodeLogger LOGGER)
       throws Exception {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public String buildParameterScript(FskSimulation simulation) {
+  String buildParameterScript(FskSimulation simulation) {
     String paramScript = NodeUtils.buildParameterScript(simulation);
     paramScript = paramScript.replace("<-","=");
     return paramScript;
   }
 
   @Override
-  public void plotToImageFile(RunnerNodeInternalSettings internalSettings,
+  void plotToImageFile(RunnerNodeInternalSettings internalSettings,
       RunnerNodeSettings nodeSettings, FskPortObject fskObj, ExecutionContext exec)
       throws Exception {
     
@@ -92,13 +92,13 @@ public class PythonScriptHandler extends ScriptHandler {
   }
 
   @Override
-  public void restoreDefaultLibrary() throws Exception {
+  void restoreDefaultLibrary() throws Exception {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public void saveWorkspace(FskPortObject fskObj, ExecutionContext exec) throws Exception {
+  void saveWorkspace(FskPortObject fskObj, ExecutionContext exec) throws Exception {
     fskObj.workspace = FileUtil.createTempFile("workspace", ".py").toPath();
     
   }
@@ -128,7 +128,7 @@ public class PythonScriptHandler extends ScriptHandler {
 
 
   @Override
-  public void setWorkingDirectory(Path workingDirectory) throws Exception {
+  void setWorkingDirectory(Path workingDirectory) throws Exception {
     // TODO Auto-generated method stub
     
   }
@@ -137,7 +137,7 @@ public class PythonScriptHandler extends ScriptHandler {
 
 
   @Override
-  public void setupOutputCapturing(ExecutionContext exec) throws Exception {
+  void setupOutputCapturing(ExecutionContext exec) throws Exception {
     // TODO Auto-generated method stub
     
   }
@@ -146,7 +146,7 @@ public class PythonScriptHandler extends ScriptHandler {
 
 
   @Override
-  public void finishOutputCapturing(ExecutionContext exec) throws Exception {
+  void finishOutputCapturing(ExecutionContext exec) throws Exception {
  
     
   }

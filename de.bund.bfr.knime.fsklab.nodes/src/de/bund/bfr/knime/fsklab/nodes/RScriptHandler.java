@@ -39,7 +39,7 @@ public class RScriptHandler extends ScriptHandler {
   
  
  
-  public void setWorkingDirectory(Path workingDirectory) throws Exception{
+  void setWorkingDirectory(Path workingDirectory) throws Exception{
       
     controller.setWorkingDirectory(workingDirectory);
     
@@ -66,7 +66,7 @@ public class RScriptHandler extends ScriptHandler {
   
   
   @Override
-  public void installLibs(final FskPortObject fskObj,
+  void installLibs(final FskPortObject fskObj,
       ExecutionContext exec,
       NodeLogger LOGGER)throws Exception {
 
@@ -87,13 +87,13 @@ public class RScriptHandler extends ScriptHandler {
 
   }
   @Override
-  public String buildParameterScript(final FskSimulation simulation) {
+  String buildParameterScript(final FskSimulation simulation) {
     
     return NodeUtils.buildParameterScript(simulation);
     
   }
   @Override
-  public void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
+  void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
       RunnerNodeSettings nodeSettings,
       final FskPortObject fskObj,
       ExecutionContext exec)throws Exception {
@@ -104,7 +104,7 @@ public class RScriptHandler extends ScriptHandler {
    
   }
   @Override
-  public void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception {
+  void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception {
     
     
     if (fskObj.workspace == null) {
@@ -118,7 +118,7 @@ public class RScriptHandler extends ScriptHandler {
 
 
   @Override
-  public void restoreDefaultLibrary()throws Exception {
+  void restoreDefaultLibrary()throws Exception {
     controller.restorePackagePath();
     
   }
@@ -141,14 +141,14 @@ public class RScriptHandler extends ScriptHandler {
 
   
   @Override
-  public void setupOutputCapturing(ExecutionContext exec) throws Exception {
+  void setupOutputCapturing(ExecutionContext exec) throws Exception {
     executor.setupOutputCapturing(exec);
     
   }
 
 
   @Override
-  public void finishOutputCapturing(ExecutionContext exec) throws Exception {
+  void finishOutputCapturing(ExecutionContext exec) throws Exception {
     executor.finishOutputCapturing(exec);
     
   }

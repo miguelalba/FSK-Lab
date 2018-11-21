@@ -47,6 +47,7 @@ import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskSimulation;
 import de.bund.bfr.knime.fsklab.JoinRelation;
 import de.bund.bfr.knime.fsklab.r.client.RController;
+import de.bund.bfr.knime.fsklab.r.client.IRController.RException;
 import de.unirostock.sems.cbarchive.ArchiveEntry;
 import de.unirostock.sems.cbarchive.CombineArchive;
 import metadata.Parameter;
@@ -75,26 +76,103 @@ import metadata.ParameterClassification;
  */
 public abstract class ScriptHandler {
   
+  /**
+   * This template method runs a snippet of script code. It does not save the stdOutput or the stdErrOutput.
+   * After running this method, "cleanup" has to be called in order to close the communication with the script-interpreter.
+   * 
+   * 
+   * @param fskObj A {@link FSKPortObject} containing the model scripts
+   * @param simulation Part of {@link FSKPortObject} which contains the parameter list of the chosen simulation
+   * @param exec KNIME way of managing storage and information output during the current NodeModels execution
+   * @param LOGGER A {@link NodeLogger} that keeps track of the progress during the execution of the node
+   * @param internalSettings internal settings to store the image file of the plot
+   * @param nodeSettings   settings of the node containing the dimensions of the output image 
+   * @throws Exception
+   */
+  public final void runSnippet(final FskPortObject fskObj,
+      final FskSimulation simulation,
+      final ExecutionContext exec,
+      NodeLogger LOGGER,
+      final RunnerNodeInternalSettings internalSettings,
+      RunnerNodeSettings nodeSettings) throws Exception {
+
+
+
+    // Sets up working directory with resource files. This directory needs to be deleted.
+    exec.setProgress(0.05, "Add resource files");
+    {
+      String workingDirectoryString = fskObj.getWorkingDirectory();
+      if (!workingDirectoryString.isEmpty()) {
+        Path workingDirectory =
+            FileUtil.getFileFromURL(FileUtil.toURL(workingDirectoryString)).toPath();
+        setWorkingDirectory(workingDirectory);
+      }
+    }
+
+    // START RUNNING MODEL
+    exec.setProgress(0.1, "Setting up output capturing");
+
+    setupOutputCapturing(exec);
+    
+    // Install needed libraries
+    if (!fskObj.packages.isEmpty()) {
+
+      installLibs(fskObj, exec, LOGGER);
+    
+    }
+
+    exec.setProgress(0.71, "Add paths to libraries");
+
+  
+    exec.setProgress(0.72, "Set parameter values");
+    LOGGER.info(" Running with '" + simulation.getName() + "' simulation!");
+    String paramScript = buildParameterScript(simulation);
+
+    runScript(paramScript, exec, true);
+
+    exec.setProgress(0.75, "Run models script");
+
+    runScript(fskObj.model, exec, false);
+    
+    exec.setProgress(0.9, "Run visualization script");
+    try {
+
+      plotToImageFile(internalSettings, nodeSettings, fskObj, exec);
+      // Save path of generated plot
+      fskObj.setPlot(internalSettings.imageFile.getAbsolutePath());
+    } catch (final RException exception) {
+      LOGGER.warn("Visualization script failed", exception);
+    }
+
+    exec.setProgress(0.96, "Restore library paths");
+    
+    restoreDefaultLibrary();
+
+    exec.setProgress(0.98, "Collecting captured output");
+    
+    finishOutputCapturing(exec);
+    saveWorkspace(fskObj, exec);
+  }
   
   /**
    * Set the directory in which the interpreter can temporarily save data while executing the script 
    * @param workingDirectory The directory in which the script code is executed
    * @throws Exception if an error occurs accessing the directory
    */
-  public abstract void setWorkingDirectory(Path workingDirectory)throws Exception;
+  abstract void setWorkingDirectory(Path workingDirectory)throws Exception;
   /**
    * Needed if the interpreter requires specific code necessary for starting output capturing.
    * @param exec KNIME way of managing storage and information output during the current NodeModels execution
    * @throws Exception 
    */
-  public abstract void setupOutputCapturing(ExecutionContext exec) throws Exception;
+  abstract void setupOutputCapturing(ExecutionContext exec) throws Exception;
   
   /**
    * Needed if interpreter requires specific code for retrieving captured output 
    * @param exec KNIME way of managing storage and information output during the current NodeModels execution
    * @throws Exception
    */
-  public abstract void finishOutputCapturing(ExecutionContext exec) throws Exception;
+  abstract void finishOutputCapturing(ExecutionContext exec) throws Exception;
   
   /**
    * Set up the way in which Eclipse and the script interpreter communicate. 
@@ -113,14 +191,14 @@ public abstract class ScriptHandler {
    * @param LOGGER A {@link NodeLogger} that keeps track of the progress during the execution of the node 
    * @throws Exception
    */
-  public abstract void installLibs(final FskPortObject fskObj,ExecutionContext exec,NodeLogger LOGGER)throws Exception;
+  abstract void installLibs(final FskPortObject fskObj,ExecutionContext exec,NodeLogger LOGGER)throws Exception;
   
   /**
    * 
    * @param simulation Part of {@link FSKPortObject} which contains the parameter list of the chosen simulation
    * @return A script in the concrete language containing a list of parameters and their values (e.g. "x <- 1.0 \n id <- 'model1'")
    */
-  public abstract String buildParameterScript(final FskSimulation simulation);
+  abstract String buildParameterScript(final FskSimulation simulation);
 
   /**
    * 
@@ -130,7 +208,7 @@ public abstract class ScriptHandler {
    * @param exec KNIME way of managing storage and information output during the current NodeModels execution
    * @throws Exception
    */
-  public abstract void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
+  abstract void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
       RunnerNodeSettings nodeSettings,
       final FskPortObject fskObj,  
       ExecutionContext exec) throws Exception;
@@ -139,7 +217,7 @@ public abstract class ScriptHandler {
    * Restore library trees to the default library.
    * @throws Exception
    */
-  public abstract void restoreDefaultLibrary()throws Exception;
+  abstract void restoreDefaultLibrary()throws Exception;
 
   /**
    * Save the workspace in the session to a file linked to by a path in the {@link FSKPortObject.workspace}.
@@ -148,7 +226,7 @@ public abstract class ScriptHandler {
    * @param exec KNIME way of managing storage and information output during the current NodeModels execution
    * @throws Exception
    */
-  public abstract void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception;
+  abstract void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception;
   
   /**
    * 

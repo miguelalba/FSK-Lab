@@ -1,5 +1,6 @@
 package de.bund.bfr.knime.fsklab.nodes;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -15,169 +16,124 @@ import org.knime.python2.kernel.PythonKernelOptions;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskSimulation;
 
-
 public class PythonScriptHandler extends ScriptHandler {
-
-  
   String std_out = "";
   String std_err = "";
-  
-  public PythonScriptHandler() {
-    fileExtention = "py";
-  }
-
-  @Override
-  FskPortObject runSnippet(AutoCloseable controller, FskPortObject fskObj, FskSimulation simulation,
-      ExecutionMonitor exec) throws Exception {
-    
-    return fskObj;
-  }
-
-  
+  // controller that communicates with Python Installation
+  PythonKernel controller;
 
   @Override
   public void setController(ExecutionContext exec) throws Exception {
-    
+    // automatically receive information about used Python Version (2.7 or 3.x)
     PythonKernelOptions m_kernelOptions = new PythonKernelOptions();
-    
     controller = new PythonKernel(m_kernelOptions);
-    
   }
 
   @Override
-  public String[] runScript(String script, ExecutionContext exec, Boolean showErrors) throws Exception {
-    
-    String[] output =((PythonKernel)controller).execute(script.replaceAll("<-", "="), exec);
+  public String[] runScript(String script, ExecutionContext exec, Boolean showErrors)
+      throws Exception {
+    String[] output = controller.execute(script.replaceAll("<-", "="), exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
     return output;
-    
   }
 
   @Override
-  public void installLibs(FskPortObject fskObj, ExecutionContext exec, NodeLogger LOGGER)
+  void installLibs(FskPortObject fskObj, ExecutionContext exec, NodeLogger LOGGER)
       throws Exception {
-    // TODO Auto-generated method stub
-    
+    // TODO Install neccessary packages
   }
 
   @Override
-  public String buildParameterScript(FskSimulation simulation) {
+  String buildParameterScript(FskSimulation simulation) {
     String paramScript = NodeUtils.buildParameterScript(simulation);
-    paramScript = paramScript.replace("<-","=");
+    paramScript = paramScript.replace("<-", "=");
     return paramScript;
   }
 
   @Override
-  public void plotToImageFile(RunnerNodeInternalSettings internalSettings,
-      RunnerNodeSettings nodeSettings, FskPortObject fskObj, ExecutionContext exec)
-      throws Exception {
-    
-    String plot_setup = "import matplotlib\n" + 
-        "matplotlib.use('Agg')";
-    
-    String [] output = ((PythonKernel)controller).execute(plot_setup, exec);
+  void plotToImageFile(RunnerNodeInternalSettings internalSettings, RunnerNodeSettings nodeSettings,
+      FskPortObject fskObj, ExecutionContext exec) throws Exception {
+    String plot_setup = "import matplotlib\n" + "matplotlib.use('Agg')";
+    String[] output = controller.execute(plot_setup, exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
-
-
     // Get image path (with proper slashes)
-    final String path = FilenameUtils.separatorsToUnix(internalSettings.imageFile.getAbsolutePath());
-
+    final String path =
+        FilenameUtils.separatorsToUnix(internalSettings.imageFile.getAbsolutePath());
     // Gets values
     String pngCommand = "fig.savefig('" + path + "')";
-    //if(fskObj.viz.contains(".show()"))
-    
-
-    output = ((PythonKernel)controller).execute(fskObj.viz,exec);
+    output = controller.execute(fskObj.viz, exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
-    output = ((PythonKernel)controller).execute(pngCommand,exec);
+    output = controller.execute(pngCommand, exec);
     std_out += output[0] + "\n";
     std_err += output[1] + "\n";
-    
-    
   }
 
   @Override
-  public void restoreDefaultLibrary() throws Exception {
-    // TODO Auto-generated method stub
-    
+  void restoreDefaultLibrary() throws Exception {
+    // TODO remove previously installed packages and restore the library
+    // to its default state
   }
 
   @Override
-  public void saveWorkspace(FskPortObject fskObj, ExecutionContext exec) throws Exception {
+  void saveWorkspace(FskPortObject fskObj, ExecutionContext exec) throws Exception {
     fskObj.workspace = FileUtil.createTempFile("workspace", ".py").toPath();
-    
   }
 
   @Override
   public String getStdOut() {
-
     return std_out;
   }
 
   @Override
   public String getStdErr() {
-
     return std_err;
   }
 
   @Override
-  public void addScriptToArchive() {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
   public void cleanup(ExecutionContext exec) throws Exception {
-    ((PythonKernel)controller).close();
+    controller.close();
     std_out = "";
     std_err = "";
   }
 
-
-
+  @Override
+  void setWorkingDirectory(Path workingDirectory, ExecutionContext exec) throws Exception {
+    String cmd = "import os\n";
+    String directory = workingDirectory.toString().replaceAll("\\\\", "/");
+    
+    cmd += "os.chdir('" + directory + "')";
+    
+    runScript(cmd,exec,false);
+    }
 
   @Override
-  public void setWorkingDirectory(Path workingDirectory) throws Exception {
-    // TODO Auto-generated method stub
-    
+  void setupOutputCapturing(ExecutionContext exec) throws Exception {
+    // can be left empty
   }
 
-
-
-
   @Override
-  public void setupOutputCapturing(ExecutionContext exec) throws Exception {
-    // TODO Auto-generated method stub
-    
-  }
-
-
-
-
-  @Override
-  public void finishOutputCapturing(ExecutionContext exec) throws Exception {
- 
-    
+  void finishOutputCapturing(ExecutionContext exec) throws Exception {
+    // can be left empty
   }
 
   @Override
   public String getPackageVersionCommand(String pkg_name) {
-    
     String command = pkg_name + ".__version__";
-
     return command;
   }
 
   @Override
   public String getPackageVersionCommand(List<String> pkg_names) {
-    String command ="";
-       
+    // TODO: find a way to get a list of all available packages
+    String command = "";
     return command;
   }
 
-
-
+  @Override
+  public String getFileExtension() {
+    return "py";
+  }
 }

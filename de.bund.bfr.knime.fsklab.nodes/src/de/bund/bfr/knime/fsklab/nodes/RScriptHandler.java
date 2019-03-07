@@ -19,148 +19,91 @@ import de.bund.bfr.knime.fsklab.r.client.ScriptExecutor;
 import de.bund.bfr.knime.fsklab.r.client.IRController.RException;
 
 public class RScriptHandler extends ScriptHandler {
+  ScriptExecutor executor;
+  RController controller;
 
-   ScriptExecutor executor;
-
-  
-   
-   public RScriptHandler() {
-     fileExtention = "r";
-   }
-   
-   public void setController( ExecutionContext exec) throws Exception {
-    
+  public void setController(ExecutionContext exec) throws Exception {
     this.controller = new RController();
-    
-    this.executor = new ScriptExecutor((RController)controller);
-    
+    this.executor = new ScriptExecutor(controller);
   }
-  
-  
 
-  public void setWorkingDirectory(Path workingDirectory) throws Exception{
-      
-    ((RController)controller).setWorkingDirectory(workingDirectory);
-    
-   }
-  
+  void setWorkingDirectory(Path workingDirectory, ExecutionContext exec) throws Exception {
+    controller.setWorkingDirectory(workingDirectory);
+  }
+
   @Override
-  public String[] runScript(String script,
-      ExecutionContext exec,
-      Boolean showErrors) throws Exception{
-  
-    
-    
-    if(showErrors) {
+  public String[] runScript(String script, ExecutionContext exec, Boolean showErrors)
+      throws Exception {
+    if (showErrors) {
       REXP c = executor.execute(script, exec);
       String[] execResult = c.asStrings();
       return execResult;
-    }else {
+    } else {
       executor.executeIgnoreResult(script, exec);
     }
     return null;
-    
   }
-  
-  
-  
+
   @Override
-  public void installLibs(final FskPortObject fskObj,
-      ExecutionContext exec,
-      NodeLogger LOGGER)throws Exception {
-
-
-    try {
-      // Install missing libraries
-      LibRegistry libReg = LibRegistry.instance();
-      List<String> missingLibs = fskObj.packages.stream().filter(lib -> !libReg.isInstalled(lib))
-          .collect(Collectors.toList());
-
-      if (!missingLibs.isEmpty()) {
-        libReg.installLibs(missingLibs, exec, LOGGER);
-      }
-    } catch (RException | REXPMismatchException e) {
-      LOGGER.error(e.getMessage());
+  void installLibs(final FskPortObject fskObj, ExecutionContext exec, NodeLogger LOGGER)
+      throws Exception {
+    // Install needed libraries
+    if (!fskObj.packages.isEmpty()) {
+      LibRegistry.instance().install(fskObj.packages);
     }
-    ((RController)controller).addPackagePath(LibRegistry.instance().getInstallationPath());
 
+    exec.setProgress(0.71, "Add paths to libraries");
+    controller.addPackagePath(LibRegistry.instance().getInstallationPath());
   }
+
   @Override
-  public String buildParameterScript(final FskSimulation simulation) {
-    
+  String buildParameterScript(final FskSimulation simulation) {
     return NodeUtils.buildParameterScript(simulation);
-    
   }
+
   @Override
-  public void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
-      RunnerNodeSettings nodeSettings,
-      final FskPortObject fskObj,
-      ExecutionContext exec)throws Exception {
-    
-    
-    NodeUtils.plot(internalSettings.imageFile, fskObj.viz, nodeSettings.width,
-        nodeSettings.height, nodeSettings.pointSize, nodeSettings.res, executor, exec);
-   
+  void plotToImageFile(final RunnerNodeInternalSettings internalSettings,
+      RunnerNodeSettings nodeSettings, final FskPortObject fskObj, ExecutionContext exec)
+      throws Exception {
+    NodeUtils.plot(internalSettings.imageFile, fskObj.viz, nodeSettings.width, nodeSettings.height,
+        nodeSettings.pointSize, nodeSettings.res, executor, exec);
   }
+
   @Override
-  public void saveWorkspace(final FskPortObject fskObj,ExecutionContext exec)throws Exception {
-    
-    executor.finishOutputCapturing(exec);
+  void saveWorkspace(final FskPortObject fskObj, ExecutionContext exec) throws Exception {
     if (fskObj.workspace == null) {
-           
       fskObj.workspace = FileUtil.createTempFile("workspace", ".R").toPath();
     }
-    ((RController)controller).saveWorkspace(fskObj.workspace, exec);
-  }
-  
-  @Override
-  public void addScriptToArchive() {
-    // TODO Auto-generated method stub
-    
+    controller.saveWorkspace(fskObj.workspace, exec);
   }
 
   @Override
-  FskPortObject runSnippet(AutoCloseable controller, FskPortObject fskObj, FskSimulation simulation,
-      ExecutionMonitor exec) throws Exception {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-
-
-  @Override
-  public void restoreDefaultLibrary()throws Exception {
-    ((RController)controller).restorePackagePath();
-    
+  void restoreDefaultLibrary() throws Exception {
+    controller.restorePackagePath();
   }
 
   @Override
   public String getStdOut() {
-
     return executor.getStdOut();
   }
 
   @Override
   public String getStdErr() {
     return executor.getStdErr();
-    
   }
-  public void cleanup(ExecutionContext exec)throws Exception {
+
+  public void cleanup(ExecutionContext exec) throws Exception {
     executor.cleanup(exec);
   }
 
-
   @Override
-  public void setupOutputCapturing(ExecutionContext exec) throws Exception {
+  void setupOutputCapturing(ExecutionContext exec) throws Exception {
     executor.setupOutputCapturing(exec);
-    
   }
 
-
   @Override
-  public void finishOutputCapturing(ExecutionContext exec) throws Exception {
+  void finishOutputCapturing(ExecutionContext exec) throws Exception {
     executor.finishOutputCapturing(exec);
-    
   }
 
   @Override
@@ -174,9 +117,11 @@ public class RScriptHandler extends ScriptHandler {
     String command =
         "available.packages(contriburl = contrib.url(c(\"https://cloud.r-project.org/\"), \"both\"))[c('"
             + pkg_names.stream().collect(Collectors.joining("','")) + "'),]";
-    
     return command;
   }
 
- 
+  @Override
+  public String getFileExtension() {
+    return "r";
+  }
 }

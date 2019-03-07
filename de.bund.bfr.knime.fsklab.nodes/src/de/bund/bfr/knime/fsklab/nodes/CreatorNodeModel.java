@@ -50,6 +50,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 import de.bund.bfr.fskml.RScript;
+import de.bund.bfr.fskml.Script;
+import de.bund.bfr.fskml.ScriptFactory;
 import de.bund.bfr.knime.fsklab.FskPortObject;
 import de.bund.bfr.knime.fsklab.FskPortObjectSpec;
 import metadata.Assay;
@@ -122,10 +124,10 @@ class CreatorNodeModel extends NoInternalsModel {
       throws InvalidSettingsException, IOException {
 
     // Reads model script
-    RScript modelRScript = readScript(nodeSettings.modelScript);
+    Script modelRScript = readScript(nodeSettings.modelScript);
 
     // Reads visualization script
-    RScript vizRScript;
+    Script vizRScript;
     if (StringUtils.isNotEmpty(nodeSettings.visualizationScript)) {
       vizRScript = readScript(nodeSettings.visualizationScript);
     } else {
@@ -259,7 +261,7 @@ class CreatorNodeModel extends NoInternalsModel {
    * @throws InvalidSettingsException if {@link path} is null or whitespace.
    * @throws IOException if the file cannot be read.
    */
-  private static RScript readScript(final String path)
+  private static Script readScript(final String path)
       throws InvalidSettingsException, IOException {
     String trimmedPath = StringUtils.trimToNull(path.trim());
 
@@ -267,7 +269,7 @@ class CreatorNodeModel extends NoInternalsModel {
     try {
       // may throw IOException
       File fScript = FileUtil.getFileFromURL(FileUtil.toURL(trimmedPath));
-      RScript script = new RScript(fScript);
+      Script script = ScriptFactory.createScript(fScript);
       return script;
     } catch (IOException e) {
       LOGGER.error(e.getMessage());

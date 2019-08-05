@@ -1,5 +1,4 @@
 
-
 import java.io.File;
 
 import org.junit.Before;
@@ -14,9 +13,9 @@ public class WorkflowsTest {
 
 	@Rule
 	public ErrorCollector collector = new ErrorCollector();
-	
+
 	private TestFlowRunner runner;
-	
+
 	@Before
 	public void setUp() {
 		TestrunConfiguration runConfiguration = new TestrunConfiguration();
@@ -26,14 +25,14 @@ public class WorkflowsTest {
 		runConfiguration.setLoadSaveLoad(false);
 		runner = new TestFlowRunner(collector, runConfiguration);
 	}
-	
+
 	@Test
 	public void testChickenModels() throws Exception {
 		runner.runTestWorkflow(new File("workflows/InitializeParentsAnimals"));
 		runner.runTestWorkflow(new File("workflows/InitializeParentsFlocks"));
 		runner.runTestWorkflow(new File("workflows/HorizontalTransmiAnimals"));
 		runner.runTestWorkflow(new File("workflows/HorizontalTransmiFlocks"));
-		runner.runTestWorkflow(new File("workflows/VerticalTransmiAnimals"));
-		runner.runTestWorkflow(new File("workflows/VerticalTransmiFlocks"));
+//		runner.runTestWorkflow(new File("workflows/VerticalTransmiAnimals"));
+//		runner.runTestWorkflow(new File("workflows/VerticalTransmiFlocks"));
 	}
 }

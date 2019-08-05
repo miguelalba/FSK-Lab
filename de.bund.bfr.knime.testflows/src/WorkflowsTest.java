@@ -32,7 +32,7 @@ public class WorkflowsTest {
 		runner.runTestWorkflow(new File("workflows/InitializeParentsFlocks"));
 		runner.runTestWorkflow(new File("workflows/HorizontalTransmiAnimals"));
 		runner.runTestWorkflow(new File("workflows/HorizontalTransmiFlocks"));
-//		runner.runTestWorkflow(new File("workflows/VerticalTransmiAnimals"));
-//		runner.runTestWorkflow(new File("workflows/VerticalTransmiFlocks"));
+		runner.runTestWorkflow(new File("workflows/VerticalTransmiAnimals"));
+		runner.runTestWorkflow(new File("workflows/VerticalTransmiFlocks"));
 	}
 }

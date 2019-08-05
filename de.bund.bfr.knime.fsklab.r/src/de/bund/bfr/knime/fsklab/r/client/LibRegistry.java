@@ -295,7 +295,7 @@ public class LibRegistry {
 		void installOnLinux(final List<String> packages, final Path lib) throws RException {
 			String pkgList = "c(" + packages.stream().map(str -> "'" + str + "'").collect(Collectors.joining(", "))
 					+ ")";
-			String cmd = String.format("install.packages(%s, lib = '%s')", pkgList, _path2String(lib));
+			String cmd = String.format("install.packages(%s, lib = '%s', repos = '%s')", pkgList, _path2String(lib), MIRROR);
 			controller.eval(cmd, false);
 		}
 

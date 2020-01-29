@@ -25,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
@@ -52,6 +54,8 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
 		Composite parent = getFieldEditorParent();
 		addField(new RHomeDirectoryFieldEditor(PreferenceInitializer.R3_PATH_CFG, "Path to R 3", parent));
 		addField(new DirectoryFieldEditor(PreferenceInitializer.PYTHON2_PATH_CFG, "Path to Python 2", parent));
+		addField(new StringFieldEditor(PreferenceInitializer.PROXY_HOST_CFG, "Proxy host", parent));
+		addField(new IntegerFieldEditor(PreferenceInitializer.PROXY_PORT_CFG, "Proxy port", parent));
 	}
 
 	@Override

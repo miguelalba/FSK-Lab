@@ -29,8 +29,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	/** Path to R v.3 */
 	static final String R3_PATH_CFG = "r3.path";
 	static final String PYTHON2_PATH_CFG = "python2Path";
+	
+	static final String PROXY_HOST_CFG = "proxyHost";
+	static final String PROXY_PORT_CFG = "proxyPort";
 
 	private static RPreferenceProvider cachedRProvider = null;
+	private static ProxyProvider cachedProxyProvider = null;
 
 	@Override
 	public void initializeDefaultPreferences() {
@@ -46,6 +50,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		IPreferenceStore store = Plugin.getDefault().getPreferenceStore();
 		store.setDefault(R3_PATH_CFG, rHome);
 		store.setDefault(PYTHON2_PATH_CFG, "");
+		store.setDefault(PROXY_HOST_CFG, "");
+		store.setDefault(PROXY_PORT_CFG, 0);
 	}
 
 	/** @return provider to the path to the R3 executable. */
@@ -56,6 +62,19 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		}
 
 		return cachedRProvider;
+	}
+	
+	public static final ProxyProvider getProxyProvider() {
+		
+		final IPreferenceStore preferenceStore = Plugin.getDefault().getPreferenceStore();
+		final String host = preferenceStore.getString(PROXY_HOST_CFG);
+		final int port = preferenceStore.getInt(PROXY_PORT_CFG);
+		
+		if (cachedProxyProvider == null || !cachedProxyProvider.getHost().equals(host) || cachedProxyProvider.getPort() != port) {
+			cachedProxyProvider = new DefaultProxyProvider(host, port);
+		}
+		
+		return cachedProxyProvider;
 	}
 	
 	/**

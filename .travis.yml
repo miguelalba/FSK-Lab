@@ -1,36 +1,47 @@
-language: java
-dist: trusty
-jdk:
-  - openjdk8
+os: windows
+language: shell
+
+
+
+install:
+  - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned'
+
 script:
-- xvfb-run mvn verify -B -Pjacoco
-- if [$TRAVIS_BRANCH == "test"]; then bash check_on_deploy.sh; fi
+  - PowerShell -File deploy_win.ps1
 
-# Cache maven repository to speed up build
-cache:
-   directories:
-      - $HOME/.m2
-
-# Before the build, install R with required packages
-before_install:
-# Install R 3.2 instead of R 3.0 from base Ubuntu
-- sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
-- sudo apt-get --allow-unauthenticated update -qq
-- sudo apt-get --allow-unauthenticated install r-base -qq
-# Install packages
-- sudo apt-get install libcurl4-openssl-dev libxml2-dev libssl-dev -qq
-- sudo R --vanilla -e 'install.packages(c("Rserve", "miniCRAN", "ggplot2", "svglite"), repos="https://cran.rstudio.com", Ncpus=2)'
-- chmod +x check_on_deploy.sh
-
-# If build succeeds upload test coverage report
-after_success:
-- pushd $TRAVIS_BUILD_DIR/de.bund.bfr.knime.testreport/target/site/jacoco-aggregate
-- bash <(curl -s https://codecov.io/bash)
-- popd
-
-# Deploy build
-deploy:
-- provider: script
-  skip_cleanup: true # to upload artifacts created during the build
-  script: bash bintray.sh
-  on: test
+# language: java
+# dist: trusty
+# jdk:
+#   - openjdk8
+# script:
+# - xvfb-run mvn verify -B -Pjacoco
+# - if [$TRAVIS_BRANCH == "test"]; then bash check_on_deploy.sh; fi
+# 
+#Cache maven repository to speed up build
+# cache:
+#    directories:
+#       - $HOME/.m2
+# 
+#Before the build, install R with required packages
+# before_install:
+#Install R 3.2 instead of R 3.0 from base Ubuntu
+# - sudo sh -c 'echo "deb http://cran.rstudio.com/bin/linux/ubuntu trusty/" >> /etc/apt/sources.list'
+# - sudo apt-get --allow-unauthenticated update -qq
+# - sudo apt-get --allow-unauthenticated install r-base -qq
+#Install packages
+# - sudo apt-get install libcurl4-openssl-dev libxml2-dev libssl-dev -qq
+# - sudo R --vanilla -e 'install.packages(c("Rserve", "miniCRAN", "ggplot2", "svglite"), repos="https://cran.rstudio.com", Ncpus=2)'
+# - chmod +x check_on_deploy.sh
+# 
+#If build succeeds upload test coverage report
+# after_success:
+# - pushd $TRAVIS_BUILD_DIR/de.bund.bfr.knime.testreport/target/site/jacoco-aggregate
+# - bash <(curl -s https://codecov.io/bash)
+# - popd
+# 
+#Deploy build
+# deploy:
+# - provider: script
+#   skip_cleanup: true # to upload artifacts created during the build
+#   script: bash bintray.sh
+#   on: test

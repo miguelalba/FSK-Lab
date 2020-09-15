@@ -36,6 +36,10 @@ deploy:
   script: bash bintray.sh
   on: test
 - provider: script
+  skip_cleanup: true # to upload artifacts created during the build
+  script: bash bintray_1.9.0-rc2.sh
+  on: 1.9.0-rc2
+- provider: script
   skip_cleanup: true
   script: bash bintray_development.sh
   on: development

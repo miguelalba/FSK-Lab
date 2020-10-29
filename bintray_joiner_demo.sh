@@ -5,6 +5,7 @@ FOLDER="$TRAVIS_BUILD_DIR/de.bund.bfr.knime.update/target/repository"
 SUBJECT=schuelet-test
 REPO=FSK-Lab_joiner_demo
 
+
 # DEPLOY TO test repo
 # =====================================================================================================
 # Delete previous version 'version'

@@ -1,5 +1,7 @@
 package de.bund.bfr.knime.fsklab.nodes;
 
+
+import de.bund.bfr.knime.fsklab.FskCondaEnvironmentCreationObserver;
 import de.bund.bfr.knime.fsklab.nodes.plot.PythonPlotter;
 import de.bund.bfr.knime.fsklab.v2_0.FskPortObject;
 import de.bund.bfr.knime.fsklab.v2_0.FskSimulation;
@@ -8,13 +10,18 @@ import de.bund.bfr.knime.fsklab.v2_0.runner.RunnerNodeSettings;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.FileUtil;
 import org.knime.python2.PythonVersion;
 import org.knime.python2.kernel.PythonKernel;
 import org.knime.python2.kernel.PythonKernelOptions;
-
+import org.knime.python2.config.CondaEnvironmentCreationObserver;
+import org.knime.python2.config.CondaEnvironmentsConfig;
+import org.knime.python2.config.AbstractCondaEnvironmentCreationObserver.CondaEnvironmentCreationStatus;
 public class PythonScriptHandler extends ScriptHandler {
   String std_out = "";
   String std_err = "";
@@ -32,7 +39,7 @@ public class PythonScriptHandler extends ScriptHandler {
     } else {
       controller = new PythonKernel(m_kernelOptions);
     }
-
+    //createCondaEnv();
     // set up backend (rendering engine) for matplotlib for image handling:
     controller.execute("import matplotlib");
     controller.execute("matplotlib.use('Agg')");
@@ -47,6 +54,19 @@ public class PythonScriptHandler extends ScriptHandler {
     this(null);
   }
 
+  private void createCondaEnv() {
+    final CondaEnvironmentsConfig condaEnvironmentsConfig = new CondaEnvironmentsConfig();
+    final FskCondaEnvironmentCreationObserver python3EnvironmentCreator = new FskCondaEnvironmentCreationObserver(
+        PythonVersion.PYTHON3, condaEnvironmentsConfig.getCondaDirectoryPath());
+    CondaEnvironmentCreationStatus m_status = new CondaEnvironmentCreationStatus();
+    String envName = "fsk_py3_env1";
+    Optional<String> pathToEnvFile = Optional.of("C:\\Users\\thsch\\OneDrive\\Dokumente\\CodeAndScripts\\fsk_py3_env1.yml");
+    python3EnvironmentCreator.startEnvironmentCreation(envName, m_status,pathToEnvFile );
+  }
+  
+  private static final String DUMMY_CFG_KEY = "dummy";
+
+  
   @Override
   public void convertToKnimeDataTable(FskPortObject fskObj, ExecutionContext exec)
       throws Exception {

@@ -805,7 +805,7 @@ const ui = {
         "id": "reference",
         "label": "Reference",
         "type": "text",
-        "description": ""
+        "description": "Information on the source, where the value of the parameter has been extracted from - if available. The format should use that used in other \"Reference\" metadata. Preferably DOI."
     },
     {
         "id": "variabilitySubject",

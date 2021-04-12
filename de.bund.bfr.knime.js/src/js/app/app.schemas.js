@@ -284,7 +284,7 @@ class GenericModel extends ModelHandler {
 		// Model math
 		this._metadata.modelMath = this.panels.modelMath.data;
 		this._metadata.modelMath.parameter = this.panels.parameter.data;
-		this._metadata.modelMath.parameter.forEach(param => delete param.reference);
+		//this._metadata.modelMath.parameter.forEach(param => delete param.reference);
 
 		this._metadata.modelMath.qualityMeasures = this.panels.qualityMeasures.data;
 		this._metadata.modelMath.modelEquation = this.panels.modelEquation.data;

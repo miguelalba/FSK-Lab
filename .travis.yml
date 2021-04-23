@@ -35,7 +35,7 @@ deploy:
   skip_cleanup: true # to upload artifacts created during the build
   script: bash gitlab.sh
   on:
-    branch: release
+    branch: release_230421
 - provider: script
   skip_cleanup: true # to upload artifacts created during the build
   script: bash gitlab_nightly.sh

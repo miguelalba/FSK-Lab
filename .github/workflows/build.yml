@@ -32,9 +32,3 @@ jobs:
         run: |
            chmod +x "${GITHUB_WORKSPACE}/.github/workflows/gitlab_deployment.sh"
            "${GITHUB_WORKSPACE}/.github/workflows/gitlab_deployment.sh"
-        with:
-            global: true
-            name: 'Thomas Schueler'
-            email: ${{ secrets.GITLAB_EMAIL }}
-            actor: ${{ secrets.GITLAB_USER }}
-            token: ${{ secrets.GITLAB_TOKEN }}

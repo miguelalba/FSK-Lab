@@ -1,5 +1,6 @@
 TARGET_FOLDER="$GITHUB_WORKSPACE/de.bund.bfr.knime.update/target"
 REPO="development"
+ls $GITHUB_WORKSPACE
 ls $TARGET_FOLDER
 # Check Gitlab repo
 #git clone https://$GITLAB_USER:$GITLAB_TOKEN@gitlab.bfr.berlin/silebat/$REPO.git

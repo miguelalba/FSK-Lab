@@ -1,4 +1,4 @@
-TARGET_FOLDER="$TRAVIS_BUILD_DIR/de.bund.bfr.knime.update/target"
+TARGET_FOLDER="$GITHUB_WORKSPACE/de.bund.bfr.knime.update/target"
 REPO="development"
 
 # Check Gitlab repo
